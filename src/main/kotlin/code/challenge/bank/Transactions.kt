@@ -23,9 +23,10 @@ sealed class TransactionRequest {
                 listOf(Transaction(this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance - this.amount)))
             }
         }
-        else -> listOf(Transaction(
-            this, TransactionStatus.Declined("NotImplemented"), BankAccount.Checking("test", BigDecimal.ZERO)
-        ))
+        is Transfer -> listOf(
+            Transaction(this, TransactionStatus.Approved, this.from.updatedBalance(this.from.balance - this.amount)),
+            Transaction(this, TransactionStatus.Approved, this.to.updatedBalance(this.to.balance + amount))
+        )
     }
 }
 
