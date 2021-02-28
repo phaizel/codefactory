@@ -24,28 +24,17 @@ sealed class TransactionRequest {
             }
         }
         is Transfer -> {
-            fun transfer(): List<Transaction> = listOf(
-                Transaction(this, TransactionStatus.Approved, this.from.updatedBalance(this.from.balance - this.amount)),
-                Transaction(this, TransactionStatus.Approved, this.to.updatedBalance(this.to.balance + amount))
-            )
-
-            val fromAccount = this.from
-            when(fromAccount) {
-                is BankAccount.Savings -> {
-                    val accountsAreLinked = fromAccount.attributes.any { it is AccountAttribute.ReferenceAccount && it.account == this.to }
-                    if(accountsAreLinked) {
-                        transfer()
-                    } else {
-                        listOf(Transaction(this, TransactionStatus.TRANSFER_FORBIDDEN, fromAccount))
-                    }
-                }
-                else -> transfer()
+            val accountsAreLinked = this.from.attributes.any { it is AccountAttribute.ReferenceAccount && it.account == this.to }
+            if (accountsAreLinked || this.from.attributes.isEmpty()) {
+                listOf(
+                    Transaction(this, TransactionStatus.Approved, this.from.updatedBalance(this.from.balance - this.amount)),
+                    Transaction(this, TransactionStatus.Approved, this.to.updatedBalance(this.to.balance + amount))
+                )
+            } else {
+                listOf(Transaction(this, TransactionStatus.TRANSFER_FORBIDDEN, this.from))
             }
-
         }
     }
-
-
 }
 
 sealed class TransactionStatus {
