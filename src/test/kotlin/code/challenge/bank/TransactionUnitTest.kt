@@ -82,4 +82,26 @@ class TransactionUnitTest {
         assertEquals(request, transaction.request)
         assertEquals(savings, transaction.result)
     }
+
+    @Test
+    fun `handling a request to transfer money from a linked account to the reference account`() {
+        val check = BankAccount.Checking(iban = generateUuid(), balance = BigDecimal(200))
+        val savings = BankAccount.Savings(iban = generateUuid(), check, balance = BigDecimal(300))
+        val request = TransactionRequest.Transfer(savings, check, BigDecimal(200))
+        val transactions = request.transact()
+
+        val transactionResultForCheck = transactions.find { it.result.iban == check.iban }!!
+        assertEquals(TransactionStatus.Approved, transactionResultForCheck.status)
+        assertEquals(request, transactionResultForCheck.request)
+
+        val expectedCheckAccount = check.copy(balance = check.balance + request.amount)
+        assertEquals(expectedCheckAccount, transactionResultForCheck.result)
+
+        val transactionResultForSavings = transactions.find { it.result.iban == savings.iban }!!
+        assertEquals(TransactionStatus.Approved, transactionResultForSavings.status)
+        assertEquals(request, transactionResultForSavings.request)
+
+        val expectedSavingsAccount = savings.copy(balance = savings.balance - request.amount)
+        assertEquals(expectedSavingsAccount, transactionResultForSavings.result)
+    }
 }
