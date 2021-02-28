@@ -23,11 +23,29 @@ sealed class TransactionRequest {
                 listOf(Transaction(this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance - this.amount)))
             }
         }
-        is Transfer -> listOf(
-            Transaction(this, TransactionStatus.Approved, this.from.updatedBalance(this.from.balance - this.amount)),
-            Transaction(this, TransactionStatus.Approved, this.to.updatedBalance(this.to.balance + amount))
-        )
+        is Transfer -> {
+            fun transfer(): List<Transaction> = listOf(
+                Transaction(this, TransactionStatus.Approved, this.from.updatedBalance(this.from.balance - this.amount)),
+                Transaction(this, TransactionStatus.Approved, this.to.updatedBalance(this.to.balance + amount))
+            )
+
+            val fromAccount = this.from
+            when(fromAccount) {
+                is BankAccount.Savings -> {
+                    val accountsAreLinked = fromAccount.attributes.any { it is AccountAttribute.ReferenceAccount && it.account == this.to }
+                    if(accountsAreLinked) {
+                        transfer()
+                    } else {
+                        listOf(Transaction(this, TransactionStatus.TRANSFER_FORBIDDEN, fromAccount))
+                    }
+                }
+                else -> transfer()
+            }
+
+        }
     }
+
+
 }
 
 sealed class TransactionStatus {
@@ -36,6 +54,7 @@ sealed class TransactionStatus {
     object Executed : TransactionStatus()
     companion object {
         val WITHDRAWAL_FORBIDDEN = Declined("Withdrawal Forbidden")
+        val TRANSFER_FORBIDDEN = Declined("Transfer from savings account to unlinked account is forbidden")
     }
 }
 
