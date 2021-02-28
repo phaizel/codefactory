@@ -4,6 +4,7 @@ import java.math.BigDecimal
 
 sealed class AccountAttribute {
     data class ReferenceAccount(val account: BankAccount) : AccountAttribute()
+    object NoWithdrawal : AccountAttribute()
 }
 
 sealed class BankAccount {
@@ -16,5 +17,8 @@ sealed class BankAccount {
         override val attributes: List<AccountAttribute>
             get() = listOf(AccountAttribute.ReferenceAccount(referenceAccount))
     }
-    data class PrivateLoan(override val iban: String, override val balance: BigDecimal) : BankAccount()
+    data class PrivateLoan(override val iban: String, override val balance: BigDecimal) : BankAccount() {
+        override val attributes: List<AccountAttribute>
+            get() = listOf(AccountAttribute.NoWithdrawal)
+    }
 }
