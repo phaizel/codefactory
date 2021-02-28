@@ -10,9 +10,14 @@ sealed class TransactionRequest {
 
     fun transact(): List<Transaction> = when(this){
         is Credit -> {
-            listOf(Transaction(
-                this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance + amount)
-            ))
+            listOf(
+                Transaction(this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance + amount))
+            )
+        }
+        is Debit -> {
+            listOf(
+                Transaction(this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance - amount))
+            )
         }
         else -> listOf(Transaction(
             this, TransactionStatus.Declined("NotImplemented"), BankAccount.Checking("test", BigDecimal.ZERO)
