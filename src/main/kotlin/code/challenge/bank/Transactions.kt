@@ -7,6 +7,17 @@ sealed class TransactionRequest {
     data class Debit(val account: BankAccount, val amount: BigDecimal) : TransactionRequest()
     data class Credit(val account: BankAccount, val amount: BigDecimal) : TransactionRequest()
     data class Transfer(val from: BankAccount, val to: BankAccount, val amount: BigDecimal) : TransactionRequest()
+
+    fun transact(): List<Transaction> = when(this){
+        is Credit -> {
+            listOf(Transaction(
+                this, TransactionStatus.Approved, this.account.updatedBalance(this.account.balance + amount)
+            ))
+        }
+        else -> listOf(Transaction(
+            this, TransactionStatus.Declined("NotImplemented"), BankAccount.Checking("test", BigDecimal.ZERO)
+        ))
+    }
 }
 
 sealed class TransactionStatus {
