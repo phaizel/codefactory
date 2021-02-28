@@ -32,4 +32,15 @@ class TransactionUnitTest {
         val expectedBankAccount = savings.copy(balance = savings.balance - request.amount)
         assertEquals(expectedBankAccount, transaction.result)
     }
+
+    @Test
+    fun `handling a request to withdraw from an account with a NoWithdrawal attribute`() {
+        val loan = BankAccount.PrivateLoan(iban = generateUuid(), balance = BigDecimal(-2300))
+        val request = TransactionRequest.Debit(loan, BigDecimal(120))
+        val transaction = request.transact().get(0)
+
+        assertEquals(TransactionStatus.WITHDRAWAL_FORBIDDEN, transaction.status)
+        assertEquals(request, transaction.request)
+        assertEquals(loan, transaction.result)
+    }
 }
