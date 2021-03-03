@@ -13,8 +13,9 @@ class TransactionService(
 
     fun transact(txnRq: BankTransaction): Set<Transaction>? {
         val account = accountRepo.findOneByIBAN(txnRq.iban) ?: return null
-
-        val transactions = BankTransaction.toTxnRequest(txnRq, account).transact().toSet()
+        val to =txnRq.to
+        val toAcc = if (to != null ) accountRepo.findOneByIBAN(to) else null
+        val transactions = BankTransaction.toTxnRequest(txnRq, account, toAcc).transact().toSet()
 
         return if (transactionRepo.save(transactions)) {
             transactions.forEach { accountRepo.update(it.result) }
@@ -37,16 +38,19 @@ class TransactionService(
 sealed class BankTransaction {
     abstract val iban: String
     abstract val amount: BigDecimal
+    open val to: String? = null
 
     data class DepositRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
     data class WithdrawalRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
-    data class TransferRequest(override val iban: String, override val amount: BigDecimal, val to: String) : BankTransaction()
+    data class TransferRequest(override val iban: String, override val amount: BigDecimal, override val to: String) : BankTransaction()
 
     companion object {
-        fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount) = when (usrTxnRq) {
+        fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount, to: BankAccount?) = when (usrTxnRq) {
             is DepositRequest -> TransactionRequest.Credit(account, usrTxnRq.amount)
             is WithdrawalRequest -> TransactionRequest.Debit(account, usrTxnRq.amount)
-            else -> TransactionRequest.Credit(account, BigDecimal.ZERO) // placeholder
+            is TransferRequest ->
+                if (to != null ) TransactionRequest.Transfer(account, to, usrTxnRq.amount)
+                else TransactionRequest.Credit(account, BigDecimal.ZERO) // mmmmh? find a better solution
         }
     }
 }
