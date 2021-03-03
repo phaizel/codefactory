@@ -2,6 +2,8 @@ package code.challenge.bank.transactions
 
 import org.springframework.stereotype.Service
 import code.challenge.bank.*
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.math.BigDecimal
 
 @Service
@@ -9,10 +11,10 @@ class TransactionService(
     private val accountRepo: AccountRepo,
     private val transactionRepo: TransactionRepo) {
 
-    fun transact(txnRq: UserTransactionRequest): Set<Transaction>? {
+    fun transact(txnRq: BankTransaction): Set<Transaction>? {
         val account = accountRepo.findOneByIBAN(txnRq.iban) ?: return null
 
-        val transactions = UserTransactionRequest.toTxnRequest(txnRq, account).transact().toSet()
+        val transactions = BankTransaction.toTxnRequest(txnRq, account).transact().toSet()
 
         return if (transactionRepo.save(transactions)) {
             transactions.forEach { accountRepo.update(it.result) }
@@ -23,13 +25,27 @@ class TransactionService(
     }
 }
 
-enum class UserTransactionType { Deposit, Withdrawal, Transfer }
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = BankTransaction.DepositRequest::class, name="Deposit"),
+    JsonSubTypes.Type(value = BankTransaction.WithdrawalRequest::class, name="Withdrawal"),
+    JsonSubTypes.Type(value = BankTransaction.TransferRequest::class, name="Transfer")
+)
+sealed class BankTransaction {
+    abstract val iban: String
+    abstract val amount: BigDecimal
 
-data class UserTransactionRequest(val transactionType: UserTransactionType, val iban: String, val amount: BigDecimal){
+    data class DepositRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
+    data class WithdrawalRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
+    data class TransferRequest(override val iban: String, override val amount: BigDecimal, val to: String) : BankTransaction()
+
     companion object {
-        fun toTxnRequest(usrTxnRq: UserTransactionRequest, account: BankAccount) = when (usrTxnRq.transactionType) {
-            UserTransactionType.Deposit -> TransactionRequest.Credit(account, usrTxnRq.amount)
-            UserTransactionType.Withdrawal -> TransactionRequest.Debit(account, usrTxnRq.amount)
+        fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount) = when (usrTxnRq) {
+            is DepositRequest -> TransactionRequest.Credit(account, usrTxnRq.amount)
+            is WithdrawalRequest -> TransactionRequest.Debit(account, usrTxnRq.amount)
             else -> TransactionRequest.Credit(account, BigDecimal.ZERO) // placeholder
         }
     }

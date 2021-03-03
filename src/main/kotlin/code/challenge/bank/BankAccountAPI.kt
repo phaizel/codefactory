@@ -27,7 +27,7 @@ class BankAccountAPI(private val accountService: AccountService) {
 class TransactionAPI(private val txnService: TransactionService) {
 
     @PostMapping
-    fun transaction(@RequestBody request: UserTransactionRequest) =
+    fun transaction(@RequestBody request: BankTransaction) =
         txnService.transact(request)?.let { HttpStatus.OK } ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.")
 }
 
