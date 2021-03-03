@@ -58,4 +58,5 @@ sealed class BankTransaction {
 @Service
 class TransactionRepo {
     fun save(transactions: Collection<Transaction>) = database.TRANSACTIONS.addAll(transactions)
+    fun findAll(iban: String) = database.TRANSACTIONS.filter { it.result.iban == iban }.toSet()
 }

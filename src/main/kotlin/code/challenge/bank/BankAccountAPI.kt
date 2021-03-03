@@ -20,6 +20,10 @@ class BankAccountAPI(private val accountService: AccountService) {
         accountService.getBalanceForAccount(iban)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This account does not exist")
 
+    @GetMapping("/{iban}/transactions")
+    fun getTxnHistory(@PathVariable iban: String) : TransactionHistoryResponse =
+        accountService.getTxnHistory(iban)
+
 }
 
 @RestController
@@ -29,5 +33,7 @@ class TransactionAPI(private val txnService: TransactionService) {
     @PostMapping
     fun transaction(@RequestBody request: BankTransaction) =
         txnService.transact(request)?.let { HttpStatus.OK } ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.")
+
+
 }
 

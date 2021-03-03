@@ -2,11 +2,15 @@ package code.challenge.bank
 
 import java.math.BigDecimal
 import org.springframework.stereotype.Service
+import code.challenge.bank.transactions.*
 
 @Service
-class AccountService(private val repo: AccountRepo) {
+class AccountService(private val repo: AccountRepo, private val transactionRepo: TransactionRepo) {
     fun getBalanceForAccount(iban: String): AccountBalanceResponse? =
         repo.findOneByIBAN(iban)?.let(AccountBalanceResponse::fromAccount)
+
+    fun getTxnHistory(iban: String): TransactionHistoryResponse =
+        TransactionHistoryResponse(transactionRepo.findAll(iban))
 }
 
 @Service
@@ -25,4 +29,6 @@ data class AccountBalanceResponse(val iban: String, val balance: BigDecimal) {
         fun fromAccount(account: BankAccount) = AccountBalanceResponse(account.iban, account.balance)
     }
 }
+
+data class TransactionHistoryResponse(val transactions: Set<Transaction>)
 
