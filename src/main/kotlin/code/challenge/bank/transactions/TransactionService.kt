@@ -29,6 +29,7 @@ data class UserTransactionRequest(val transactionType: UserTransactionType, val 
     companion object {
         fun toTxnRequest(usrTxnRq: UserTransactionRequest, account: BankAccount) = when (usrTxnRq.transactionType) {
             UserTransactionType.Deposit -> TransactionRequest.Credit(account, usrTxnRq.amount)
+            UserTransactionType.Withdrawal -> TransactionRequest.Debit(account, usrTxnRq.amount)
             else -> TransactionRequest.Credit(account, BigDecimal.ZERO) // placeholder
         }
     }
