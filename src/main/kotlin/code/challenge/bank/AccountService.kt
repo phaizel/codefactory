@@ -12,6 +12,11 @@ class AccountService(private val repo: AccountRepo) {
 @Service
 class AccountRepo {
     fun findOneByIBAN(iban: String): BankAccount? = database.BANK_ACCOUNTS.find { it.iban == iban }
+    fun update(account: BankAccount): BankAccount {
+        database.BANK_ACCOUNTS.removeIf { it.iban == account.iban }
+        database.BANK_ACCOUNTS.add(account)
+        return account
+    }
 }
 
 

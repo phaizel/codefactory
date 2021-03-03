@@ -1,6 +1,9 @@
 package code.challenge.bank
 
 import java.math.BigDecimal
+import kotlin.collections.*
+
+import code.challenge.bank.*
 
 object database {
 
@@ -18,7 +21,9 @@ object database {
     private val savings1 = BankAccount.Savings("DE945344405320138014",checking1, BigDecimal(374))
     private val savings2 = BankAccount.Savings("DE945345005320138078",checking4, BigDecimal(7312))
 
-    val BANK_ACCOUNTS = setOf(
+    val BANK_ACCOUNTS = mutableSetOf(
         checking1,checking2,checking3,checking4,loan1 ,loan2 , loan3, loan4, loan5,savings1, savings2
     )
+
+    val TRANSACTIONS = mutableSetOf<Transaction>()
 }
