@@ -13,9 +13,8 @@ class TransactionService(
 
     fun transact(txnRq: BankTransaction): Set<Transaction>? {
         val account = accountRepo.findOneByIBAN(txnRq.iban) ?: return null
-        val to =txnRq.to
-        val toAcc = if (to != null ) accountRepo.findOneByIBAN(to) else null
-        val transactions = toTxnRequest(txnRq, account, toAcc).transact().toSet()
+
+        val transactions = toTxnRequest(txnRq, account).transact().toSet()
 
         return if (transactionRepo.save(transactions)) {
             transactions.forEach { accountRepo.update(it.result) }
@@ -25,12 +24,15 @@ class TransactionService(
         }
     }
 
-    private fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount, to: BankAccount?) = when (usrTxnRq) {
+    private fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount) = when (usrTxnRq) {
         is BankTransaction.DepositRequest -> TransactionRequest.Credit(account, usrTxnRq.amount)
         is BankTransaction.WithdrawalRequest -> TransactionRequest.Debit(account, usrTxnRq.amount)
-        is BankTransaction.TransferRequest ->
-            if (to != null ) TransactionRequest.Transfer(account, to, usrTxnRq.amount)
+        is BankTransaction.TransferRequest -> {
+            val to = usrTxnRq.to
+            val toAcc = accountRepo.findOneByIBAN(to)
+            if (toAcc != null) TransactionRequest.Transfer(account, toAcc, usrTxnRq.amount)
             else TransactionRequest.Credit(account, BigDecimal.ZERO) // mmmmh? find a better solution
+        }
     }
 }
 
@@ -39,9 +41,9 @@ class TransactionService(
     include = JsonTypeInfo.As.PROPERTY,
     property = "type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = BankTransaction.DepositRequest::class, name="Deposit"),
-    JsonSubTypes.Type(value = BankTransaction.WithdrawalRequest::class, name="Withdrawal"),
-    JsonSubTypes.Type(value = BankTransaction.TransferRequest::class, name="Transfer")
+    JsonSubTypes.Type(value = BankTransaction.DepositRequest::class, name = "Deposit"),
+    JsonSubTypes.Type(value = BankTransaction.WithdrawalRequest::class, name = "Withdrawal"),
+    JsonSubTypes.Type(value = BankTransaction.TransferRequest::class, name = "Transfer")
 )
 sealed class BankTransaction {
     abstract val iban: String
