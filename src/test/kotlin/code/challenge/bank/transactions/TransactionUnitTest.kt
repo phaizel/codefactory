@@ -1,12 +1,10 @@
-package code.challenge.bank
+package code.challenge.bank.transactions
 
 import code.challenge.bank.accounts.BankAccount
+import code.challenge.bank.generateUuid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-
-import code.challenge.bank.transactions.TransactionRequest
-import code.challenge.bank.transactions.TransactionStatus
 
 class TransactionUnitTest {
 
