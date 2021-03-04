@@ -1,7 +1,10 @@
-package code.challenge.bank
+package code.challenge.bank.transactions
 
 import java.math.BigDecimal
 import java.time.OffsetDateTime
+
+import code.challenge.bank.BankAccount
+import code.challenge.bank.AccountAttribute
 
 sealed class TransactionRequest {
     data class Debit(val account: BankAccount, val amount: BigDecimal) : TransactionRequest()

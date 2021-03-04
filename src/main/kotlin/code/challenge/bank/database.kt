@@ -3,7 +3,7 @@ package code.challenge.bank
 import java.math.BigDecimal
 import kotlin.collections.*
 
-import code.challenge.bank.*
+import code.challenge.bank.transactions.Transaction
 
 object database {
 
