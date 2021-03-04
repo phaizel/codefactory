@@ -15,7 +15,7 @@ class TransactionService(
         val account = accountRepo.findOneByIBAN(txnRq.iban) ?: return null
         val to =txnRq.to
         val toAcc = if (to != null ) accountRepo.findOneByIBAN(to) else null
-        val transactions = BankTransaction.toTxnRequest(txnRq, account, toAcc).transact().toSet()
+        val transactions = toTxnRequest(txnRq, account, toAcc).transact().toSet()
 
         return if (transactionRepo.save(transactions)) {
             transactions.forEach { accountRepo.update(it.result) }
@@ -23,6 +23,14 @@ class TransactionService(
         } else {
             null
         }
+    }
+
+    private fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount, to: BankAccount?) = when (usrTxnRq) {
+        is BankTransaction.DepositRequest -> TransactionRequest.Credit(account, usrTxnRq.amount)
+        is BankTransaction.WithdrawalRequest -> TransactionRequest.Debit(account, usrTxnRq.amount)
+        is BankTransaction.TransferRequest ->
+            if (to != null ) TransactionRequest.Transfer(account, to, usrTxnRq.amount)
+            else TransactionRequest.Credit(account, BigDecimal.ZERO) // mmmmh? find a better solution
     }
 }
 
@@ -43,16 +51,6 @@ sealed class BankTransaction {
     data class DepositRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
     data class WithdrawalRequest(override val iban: String, override val amount: BigDecimal ) : BankTransaction()
     data class TransferRequest(override val iban: String, override val amount: BigDecimal, override val to: String) : BankTransaction()
-
-    companion object {
-        fun toTxnRequest(usrTxnRq: BankTransaction, account: BankAccount, to: BankAccount?) = when (usrTxnRq) {
-            is DepositRequest -> TransactionRequest.Credit(account, usrTxnRq.amount)
-            is WithdrawalRequest -> TransactionRequest.Debit(account, usrTxnRq.amount)
-            is TransferRequest ->
-                if (to != null ) TransactionRequest.Transfer(account, to, usrTxnRq.amount)
-                else TransactionRequest.Credit(account, BigDecimal.ZERO) // mmmmh? find a better solution
-        }
-    }
 }
 
 @Service
