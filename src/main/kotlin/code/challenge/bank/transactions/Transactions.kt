@@ -3,8 +3,8 @@ package code.challenge.bank.transactions
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
-import code.challenge.bank.BankAccount
-import code.challenge.bank.AccountAttribute
+import code.challenge.bank.accounts.AccountAttribute
+import code.challenge.bank.accounts.BankAccount
 
 sealed class TransactionRequest {
     data class Debit(val account: BankAccount, val amount: BigDecimal) : TransactionRequest()
@@ -40,6 +40,7 @@ sealed class TransactionRequest {
     }
 }
 
+// FIXME json response not parsing details
 sealed class TransactionStatus {
     object Approved : TransactionStatus()
     class Declined(vararg val reasons: String) : TransactionStatus()

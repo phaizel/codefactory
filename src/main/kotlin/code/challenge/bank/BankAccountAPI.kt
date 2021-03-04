@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
 import code.challenge.bank.transactions.*
+import code.challenge.bank.accounts.*
 
 @RestController
 @RequestMapping("/api/account")

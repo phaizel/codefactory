@@ -1,5 +1,6 @@
-package code.challenge.bank
+package code.challenge.bank.accounts
 
+import code.challenge.bank.database
 import java.math.BigDecimal
 import org.springframework.stereotype.Service
 import code.challenge.bank.transactions.*

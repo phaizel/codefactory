@@ -1,4 +1,4 @@
-package code.challenge.bank
+package code.challenge.bank.accounts
 
 import java.math.BigDecimal
 
